@@ -1,0 +1,13 @@
+{
+  "name": "mongodb-cube-converter",
+  "version": "1.0.0",
+  "description": "This script converts a MongoDB collection of documents into a hyperdimensional cube using a bottom-up approach.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "mongodb": "^3.7.3",
+    "mdb-cubes": "^1.0.0"
+  }
+}
