@@ -22,6 +22,9 @@ RUN git clone https://github.com/OrkunT/cube-migrator.git ./cube-migrator
 WORKDIR /app/cube-migrator
 RUN npm install
 
+RUN npm install util buffer stream-browserify crypto-browserify aws4 mongodb-client-encryption http url querystring os zlib fs path dns assert module
+
+
 # Build the second repository
 RUN npm run build
 
