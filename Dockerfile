@@ -12,7 +12,7 @@ RUN git clone https://github.com/OrkunT/cubes.git ./cubes
 
 # Install the dependencies in the container for the first repository
 WORKDIR /app/cubes
-RUN npm install mdb-cubes
+RUN npm install
 
 # Clone the second GitHub repository
 WORKDIR /app
