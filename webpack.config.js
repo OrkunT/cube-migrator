@@ -15,7 +15,6 @@ module.exports = {
       "dgram": false,
       "tls": false,
       "zlib": require.resolve("browserify-zlib"),
-      "util": require.resolve("util/"),
       "buffer": require.resolve("buffer/"),
       "stream": require.resolve("stream-browserify"),
       "crypto": require.resolve("crypto-browserify"),
