@@ -65,7 +65,7 @@ async function run() {
       let dimensions = extractDimensions(doc);
 
       // Create a cube for the document
-      let cube = cubes(doc);
+      let cube = cubes.createCube(doc);
 
       // Assign dimensions to the cube
       dimensions.forEach(dimension => {
