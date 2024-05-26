@@ -73,7 +73,7 @@ async function run() {
       let measures = extractMeasures(doc); // You need to define this function
 
       // Create a cube for the document using the createCube function
-      let cubePipeline = createCube(dimensions, measures, targetCollectionName);
+      let cubePipeline = cubes.createCube(dimensions, measures, targetCollectionName);
 
       // Run the aggregation pipeline to create the cube
       await db.collection(sourceCollectionName).aggregate(cubePipeline).toArray();
