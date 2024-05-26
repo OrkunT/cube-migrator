@@ -16,79 +16,76 @@ const targetCollectionName = 'hypertestcollection';
 // Create a new MongoClient
 const client = new MongoClient(url);
 
-function extractDimensions(pipeline) {
+function extractDimensions(doc) {
   let dimensions = [];
 
   function traverse(obj, path = '') {
     for (let key in obj) {
       if (typeof obj[key] === 'object' && obj[key] !== null) {
         traverse(obj[key], path ? `${path}.${key}` : key);
-      } else {
+      } else if (typeof obj[key] === 'string') {
         dimensions.push(path ? `${path}.${key}` : key);
       }
     }
   }
 
-  traverse(pipeline);
+  traverse(doc);
 
   return dimensions;
 }
+
+function extractMeasures(doc) {
+  let measures = [];
+
+  function traverse(obj, path = '') {
+    for (let key in obj) {
+      if (typeof obj[key] === 'object' && obj[key] !== null) {
+        traverse(obj[key], path ? `${path}.${key}` : key);
+      } else if (typeof obj[key] === 'number') {
+        measures.push(path ? `${path}.${key}` : key);
+      }
+    }
+  }
+
+  traverse(doc);
+
+  return measures;
+}
+
 
 async function run() {
   try {
     // Connect the client to the server
     await client.connect();
-
-    // Establish and verify connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Connected successfully to server");
+    // ... rest of your connection code
 
     const db = client.db(dbName);
-
-    // Get the source collection
     const sourceCollection = db.collection(sourceCollectionName);
-
-    // Get the total number of documents in the collection
     const totalDocuments = await sourceCollection.countDocuments();
-
-    // Get a cursor to the documents
     const cursor = sourceCollection.find({});
-
-    // Initialize a counter for the documents processed
     let processedDocuments = 0;
 
-    // Process documents in chunks
     while(await cursor.hasNext()) {
       const doc = await cursor.next();
 
-      // Extract dimensions
-      let dimensions = extractDimensions(doc);
+      // Extract dimensions and measures from the document
+      let dimensions = extractDimensions(doc); // Assuming this function is defined elsewhere
+      let measures = extractMeasures(doc); // You need to define this function
 
-      // Create a cube for the document
-      let cube = cubes.createCube(doc);
+      // Create a cube for the document using the createCube function
+      let cubePipeline = createCube(dimensions, measures, targetCollectionName);
 
-      // Assign dimensions to the cube
-      dimensions.forEach(dimension => {
-        cube.dimension(dimension);
-      });
-
-      // Insert the cube into the target collection
-      await db.collection(targetCollectionName).insertOne(cube);
+      // Run the aggregation pipeline to create the cube
+      await db.collection(sourceCollectionName).aggregate(cubePipeline).toArray();
 
       // Increment the counter for the documents processed
       processedDocuments++;
-
-      // Print progress for every 10000 documents processed
-      if (processedDocuments % 10000 === 0) {
-        let progress = (processedDocuments / totalDocuments) * 100;
-        console.log(`Processed ${processedDocuments} out of ${totalDocuments} documents (${progress.toFixed(2)}%)`);
-      }
+      // ... rest of your progress code
     }
-
   } finally {
-    // Ensures that the client will close when you finish/error
     await client.close();
   }
 }
+
 
 module.exports = run;
