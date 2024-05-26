@@ -27,4 +27,5 @@ module.exports = {
       "assert": require.resolve("assert/"),
       "module": require.resolve("module/")
     },
+}
 };
