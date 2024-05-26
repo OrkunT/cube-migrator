@@ -8,21 +8,26 @@ module.exports = {
   },
   resolve: {
     fallback: {
+      "fs": false,
+      "constants": require.resolve("constants-browserify"),
+      "http": require.resolve("stream-http"),
+      "net": false,
+      "dgram": false,
+      "tls": false,
+      "zlib": require.resolve("browserify-zlib"),
       "util": require.resolve("util/"),
       "buffer": require.resolve("buffer/"),
       "stream": require.resolve("stream-browserify"),
       "crypto": require.resolve("crypto-browserify"),
       "aws4": require.resolve("aws4"),
       "mongodb-client-encryption": require.resolve("mongodb-client-encryption"),
-      "http": require.resolve("http"),
       "url": require.resolve("url"),
       "querystring": require.resolve("querystring"),
-      "os": require.resolve("os"),
-      "zlib": require.resolve("zlib"),
-      "path": require.resolve("path/"),
-      "dns": require.resolve("dns/"),
+      "os": require.resolve("os-browserify"),
+      "path": require.resolve("path-browserify"),
+      "dns": false,
       "assert": require.resolve("assert/"),
-      "module": require.resolve("module/")
+      "module": false
     },
   }
 };
