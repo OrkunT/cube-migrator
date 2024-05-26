@@ -1,5 +1,3 @@
-// webpack.config.js
-
 const path = require('path');
 
 module.exports = {
@@ -21,11 +19,10 @@ module.exports = {
       "querystring": require.resolve("querystring"),
       "os": require.resolve("os"),
       "zlib": require.resolve("zlib"),
-      "fs": require.resolve("fs/"),
       "path": require.resolve("path/"),
       "dns": require.resolve("dns/"),
       "assert": require.resolve("assert/"),
       "module": require.resolve("module/")
     },
-}
+  }
 };
