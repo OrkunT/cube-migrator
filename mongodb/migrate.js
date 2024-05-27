@@ -78,12 +78,12 @@ async function run() {
       const doc = await cursor.next();
 
       // Check the size of the log file
-      const stats = fs.statSync(logFile);
-      if (stats.size > maxLogSize) {
+      //const stats = fs.statSync(logFile);
+      //if (stats.size > maxLogSize) {
         // If the log file is larger than 50MB, clear it
-        fs.writeFileSync(logFile, '');
-        logStream = fs.createWriteStream(logFile, { flags: 'a' });
-      }
+      //  fs.writeFileSync(logFile, '');
+      //  logStream = fs.createWriteStream(logFile, { flags: 'a' });
+     // }
 
       logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
 
