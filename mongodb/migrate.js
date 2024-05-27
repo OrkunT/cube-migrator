@@ -56,8 +56,11 @@ function extractMeasures(doc) {
 const fs = require('fs');
 const util = require('util');
 
+const fs = require('fs');
+const util = require('util');
+
 async function run() {
-  const logStream = fs.createWriteStream('migrateapp.log', { flags: 'a' });
+  const logStream = fs.createWriteStream('app.log', { flags: 'a' });
   try {
     logStream.write('Connecting to the server...\n');
     await client.connect();
@@ -84,6 +87,9 @@ async function run() {
 
       let cubePipeline = cubes.createCube(dimensions, measures, targetCollectionName);
 
+      // Add a $match stage to the beginning of the pipeline to filter for the current document
+      cubePipeline.unshift({ $match: { _id: doc._id } });
+
       logStream.write(`Running aggregation pipeline for document ${processedDocuments + 1}...\n`);
       await db.collection(sourceCollectionName).aggregate(cubePipeline).toArray();
       logStream.write(`Finished processing document ${processedDocuments + 1}.\n`);
@@ -99,6 +105,7 @@ async function run() {
     logStream.end();
   }
 }
+
 
 
 module.exports = run;
