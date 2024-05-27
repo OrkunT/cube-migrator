@@ -69,8 +69,8 @@ async function run() {
       const doc = await cursor.next();
 
       // Extract dimensions and measures from the document
-      let dimensions = extractDimensions(doc); // Assuming this function is defined elsewhere
-      let measures = extractMeasures(doc); // You need to define this function
+      let dimensions = extractDimensions(doc); 
+      let measures = extractMeasures(doc); 
 
       // Create a cube for the document using the createCube function
       let cubePipeline = cubes.createCube(dimensions, measures, targetCollectionName);
@@ -80,7 +80,7 @@ async function run() {
 
       // Increment the counter for the documents processed
       processedDocuments++;
-      // ... rest of your progress code
+      
     }
   } finally {
     await client.close();
