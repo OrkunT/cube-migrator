@@ -56,9 +56,6 @@ function extractMeasures(doc) {
 const fs = require('fs');
 const util = require('util');
 
-const fs = require('fs');
-const util = require('util');
-
 async function run() {
   const logStream = fs.createWriteStream('app.log', { flags: 'a' });
   try {
