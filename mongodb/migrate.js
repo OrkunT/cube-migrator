@@ -57,7 +57,9 @@ const fs = require('fs');
 const util = require('util');
 
 async function run() {
-  const logStream = fs.createWriteStream('app.log', { flags: 'a' });
+  const logFile = 'app.log';
+  const maxLogSize = 50 * 1024 * 1024; // 50MB
+  const logStream = fs.createWriteStream(logFile, { flags: 'a' });
   try {
     logStream.write('Connecting to the server...\n');
     await client.connect();
@@ -68,11 +70,20 @@ async function run() {
     const totalDocuments = await sourceCollection.countDocuments();
     logStream.write(`Total documents to process: ${totalDocuments}\n`);
 
-    const cursor = sourceCollection.find({});
+    const cursor = sourceCollection.find({}).sort({ ts: 1 });
     let processedDocuments = 0;
+    let previousDoc = null;
 
     while(await cursor.hasNext()) {
       const doc = await cursor.next();
+
+      // Check the size of the log file
+      const stats = fs.statSync(logFile);
+      if (stats.size > maxLogSize) {
+        // If the log file is larger than 50MB, clear it
+        fs.writeFileSync(logFile, '');
+        logStream = fs.createWriteStream(logFile, { flags: 'a' });
+      }
 
       logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
 
@@ -85,13 +96,16 @@ async function run() {
       let cubePipeline = cubes.createCube(dimensions, measures, targetCollectionName);
 
       // Add a $match stage to the beginning of the pipeline to filter for the current document
-      cubePipeline.unshift({ $match: { _id: doc._id } });
+      if (previousDoc) {
+        cubePipeline.unshift({ $match: { ts: { $gt: previousDoc.ts } } });
+      }
 
       logStream.write(`Running aggregation pipeline for document ${processedDocuments + 1}...\n`);
       await db.collection(sourceCollectionName).aggregate(cubePipeline).toArray();
       logStream.write(`Finished processing document ${processedDocuments + 1}.\n`);
-
+      
       processedDocuments++;
+      previousDoc = doc;
     }
 
     logStream.write(`Finished processing all ${totalDocuments} documents.\n`);
@@ -102,6 +116,7 @@ async function run() {
     logStream.end();
   }
 }
+
 
 
 
