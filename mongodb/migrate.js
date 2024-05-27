@@ -4,7 +4,7 @@ const MongoClient = require('mongodb').MongoClient;
 const cubes = require("mdb-cubes");
 
 // Connection URL
-const url = 'mongodb://localhost:27017';
+const url = 'mongodb://mongodb:27017';
 
 // Database Name
 const dbName = 'testDB';
