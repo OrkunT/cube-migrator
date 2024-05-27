@@ -53,37 +53,50 @@ function extractMeasures(doc) {
 }
 
 
+const fs = require('fs');
+const util = require('util');
+
 async function run() {
+  const logStream = fs.createWriteStream('migrateapp.log', { flags: 'a' });
   try {
-    // Connect the client to the server
+    logStream.write('Connecting to the server...\n');
     await client.connect();
-    // ... rest of your connection code
+    logStream.write('Connected to the server.\n');
 
     const db = client.db(dbName);
     const sourceCollection = db.collection(sourceCollectionName);
     const totalDocuments = await sourceCollection.countDocuments();
+    logStream.write(`Total documents to process: ${totalDocuments}\n`);
+
     const cursor = sourceCollection.find({});
     let processedDocuments = 0;
 
     while(await cursor.hasNext()) {
       const doc = await cursor.next();
 
-      // Extract dimensions and measures from the document
+      logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
+
       let dimensions = extractDimensions(doc); 
       let measures = extractMeasures(doc); 
 
-      // Create a cube for the document using the createCube function
+      logStream.write(`Dimensions: ${util.inspect(dimensions)}\n`);
+      logStream.write(`Measures: ${util.inspect(measures)}\n`);
+
       let cubePipeline = cubes.createCube(dimensions, measures, targetCollectionName);
 
-      // Run the aggregation pipeline to create the cube
+      logStream.write(`Running aggregation pipeline for document ${processedDocuments + 1}...\n`);
       await db.collection(sourceCollectionName).aggregate(cubePipeline).toArray();
+      logStream.write(`Finished processing document ${processedDocuments + 1}.\n`);
 
-      // Increment the counter for the documents processed
       processedDocuments++;
-      
     }
+
+    logStream.write(`Finished processing all ${totalDocuments} documents.\n`);
   } finally {
+    logStream.write('Closing the client connection...\n');
     await client.close();
+    logStream.write('Client connection closed.\n');
+    logStream.end();
   }
 }
 
