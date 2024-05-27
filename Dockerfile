@@ -22,8 +22,8 @@ RUN git clone https://github.com/OrkunT/cube-migrator.git ./cube-migrator
 WORKDIR /app/cube-migrator
 RUN npm install
 
-# Make port 8080 available to the world outside this container
-EXPOSE 8080
+# Install the dependencies in the container for modified cube
+RUN npm install ../cubes
 
 # Run index.js when the container launches
 CMD ["node", "index.js"] 
