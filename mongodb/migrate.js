@@ -71,61 +71,40 @@ function addMeasures(measures1, measures2) {
   return aggregatedMeasures;
 }
 
-// Function to replace forbidden characters when saving to MongoDB
-function normalize(obj) {
+const Buffer = require('buffer').Buffer;
+
+// Function to encode keys when saving to MongoDB
+function encodeKeys(obj) {
   for (let key in obj) {
     if (obj.hasOwnProperty(key)) {
-      let newKey = key;
-      if (newKey.startsWith('$')) {
-        newKey = newKey.replace('$', 'normalizedDollar_');
-      }
-      if (newKey.includes('.')) {
-        newKey = newKey.replace(/\./g, 'normalizedDot_');
-      }
-      if (newKey !== key) {
-        obj[newKey] = obj[key];
+      let encodedKey = Buffer.from(key).toString('base64');
+      if (encodedKey !== key) {
+        obj[encodedKey] = obj[key];
         delete obj[key];
       }
-      if (typeof obj[newKey] === 'object' && obj[newKey] !== null) {
-        normalize(obj[newKey]);
-      } else if (Array.isArray(obj[newKey])) {
-        obj[newKey].forEach(item => {
-          if (typeof item === 'object' && item !== null) {
-            normalize(item);
-          }
-        });
+      if (typeof obj[encodedKey] === 'object' && obj[encodedKey] !== null) {
+        encodeKeys(obj[encodedKey]);
       }
     }
   }
 }
 
-// Function to replace normalized characters when querying from MongoDB
-function denormalize(obj) {
+// Function to decode keys when querying from MongoDB
+function decodeKeys(obj) {
   for (let key in obj) {
     if (obj.hasOwnProperty(key)) {
-      let newKey = key;
-      if (newKey.startsWith('normalizedDollar_')) {
-        newKey = newKey.replace('normalizedDollar_', '$');
-      }
-      if (newKey.includes('normalizedDot_')) {
-        newKey = newKey.replace(/normalizedDot_/g, '.');
-      }
-      if (newKey !== key) {
-        obj[newKey] = obj[key];
+      let decodedKey = Buffer.from(key, 'base64').toString('utf8');
+      if (decodedKey !== key) {
+        obj[decodedKey] = obj[key];
         delete obj[key];
       }
-      if (typeof obj[newKey] === 'object' && obj[newKey] !== null) {
-        denormalize(obj[newKey]);
-      } else if (Array.isArray(obj[newKey])) {
-        obj[newKey].forEach(item => {
-          if (typeof item === 'object' && item !== null) {
-            denormalize(item);
-          }
-        });
+      if (typeof obj[decodedKey] === 'object' && obj[decodedKey] !== null) {
+        decodeKeys(obj[decodedKey]);
       }
     }
   }
 }
+
 
 
 const fs = require('fs');
