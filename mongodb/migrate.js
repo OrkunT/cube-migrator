@@ -66,6 +66,49 @@ function addMeasures(measures1, measures2) {
   };
 }
 
+// Function to replace forbidden characters when saving to MongoDB
+function normalize(obj) {
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      let newKey = key;
+      if (newKey.startsWith('$')) {
+        newKey = newKey.replace('$', 'normalizedDollar_');
+      }
+      if (newKey.includes('.')) {
+        newKey = newKey.replace(/\./g, 'normalizedDot_');
+      }
+      if (newKey !== key) {
+        obj[newKey] = obj[key];
+        delete obj[key];
+      }
+      if (typeof obj[newKey] === 'object' && obj[newKey] !== null) {
+        normalize(obj[newKey]);
+      }
+    }
+  }
+}
+
+// Function to replace normalized characters when querying from MongoDB
+function denormalize(obj) {
+  for (let key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      let newKey = key;
+      if (newKey.startsWith('normalizedDollar_')) {
+        newKey = newKey.replace('normalizedDollar_', '$');
+      }
+      if (newKey.includes('normalizedDot_')) {
+        newKey = newKey.replace(/normalizedDot_/g, '.');
+      }
+      if (newKey !== key) {
+        obj[newKey] = obj[key];
+        delete obj[key];
+      }
+      if (typeof obj[newKey] === 'object' && obj[newKey] !== null) {
+        denormalize(obj[newKey]);
+      }
+    }
+  }
+}
 
 
 const fs = require('fs');
@@ -98,17 +141,18 @@ async function run() {
 
   logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
 
+  // Normalize currentDoc
+  normalize(currentDoc);
+
+  // Extract measures from the normalized currentDoc
   let measures = extractMeasures(currentDoc);
-  let safeMeasures = {};
-  for (let key in measures) {
-    let safeKey = key.replace(".", "_");
-    safeMeasures[safeKey] = measures[key];
-  }
-  // Initialize current document with its own aggregated values
+
+  // Initialize currentDocAggregated with its own aggregated values
   let currentDocAggregated = {
     ...currentDoc,
-    measures: safeMeasures // Assuming extractMeasures returns the initial aggregated values
+    measures: measures // Assuming extractMeasures returns the initial aggregated values
   };
+
 
   // If there is a previous document, retrieve its aggregated values and add them to the current document's measures
   if (previousDoc) {
