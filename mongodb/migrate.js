@@ -57,13 +57,18 @@ function extractMeasures(doc) {
 }
 
 
+// Updated addMeasures function to handle individual measures
 function addMeasures(measures1, measures2) {
-  return {
-    sum: measures1.sum + measures2.sum,
-    min: Math.min(measures1.min, measures2.min),
-    max: Math.max(measures1.max, measures2.max),
-    count: measures1.count + measures2.count
-  };
+  let aggregatedMeasures = {};
+  Object.keys(measures1).forEach((measure) => {
+    aggregatedMeasures[measure] = {
+      sum: (measures1[measure].sum || 0) + (measures2[measure].sum || 0),
+      min: Math.min(measures1[measure].min || Infinity, measures2[measure].min || Infinity),
+      max: Math.max(measures1[measure].max || -Infinity, measures2[measure].max || -Infinity),
+      count: (measures1[measure].count || 0) + (measures2[measure].count || 0)
+    };
+  });
+  return aggregatedMeasures;
 }
 
 // Function to replace forbidden characters when saving to MongoDB
@@ -147,11 +152,21 @@ async function run() {
   // Extract measures from the normalized currentDoc
   let measures = extractMeasures(currentDoc);
 
-  // Initialize currentDocAggregated with its own aggregated values
-  let currentDocAggregated = {
-    ...currentDoc,
-    measures: measures // Assuming extractMeasures returns the initial aggregated values
-  };
+      // Initialize currentDocAggregated with its own aggregated values
+    let currentDocAggregated = {
+      ...currentDoc,
+      measures: {} // Initialize an empty object for measures
+    };
+
+    // Initialize aggregated values for each measure
+    measures.forEach((measure) => {
+      currentDocAggregated.measures[measure] = {
+        sum: currentDoc[measure],
+        min: currentDoc[measure],
+        max: currentDoc[measure],
+        count: 1
+      };
+    });
 
 
   // If there is a previous document, retrieve its aggregated values and add them to the current document's measures
