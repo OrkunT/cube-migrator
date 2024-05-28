@@ -39,10 +39,14 @@ function extractMeasures(doc) {
 
   function traverse(obj, path = '') {
     for (let key in obj) {
+      // If the key starts with a dollar sign, replace it with '$_'
+      let safeKey = key.startsWith('$') ? `$_${key.slice(1)}` : key;
+      let newPath = path ? `${path}.${safeKey}` : safeKey;
+
       if (typeof obj[key] === 'object' && obj[key] !== null) {
-        traverse(obj[key], path ? `${path}.${key}` : key);
+        traverse(obj[key], newPath);
       } else if (typeof obj[key] === 'number') {
-        measures.push(path ? `${path}.${key}` : key);
+        measures.push(newPath);
       }
     }
   }
@@ -51,6 +55,7 @@ function extractMeasures(doc) {
 
   return measures;
 }
+
 
 function addMeasures(measures1, measures2) {
   return {
