@@ -88,6 +88,12 @@ function normalize(obj) {
       }
       if (typeof obj[newKey] === 'object' && obj[newKey] !== null) {
         normalize(obj[newKey]);
+      } else if (Array.isArray(obj[newKey])) {
+        obj[newKey].forEach(item => {
+          if (typeof item === 'object' && item !== null) {
+            normalize(item);
+          }
+        });
       }
     }
   }
@@ -110,6 +116,12 @@ function denormalize(obj) {
       }
       if (typeof obj[newKey] === 'object' && obj[newKey] !== null) {
         denormalize(obj[newKey]);
+      } else if (Array.isArray(obj[newKey])) {
+        obj[newKey].forEach(item => {
+          if (typeof item === 'object' && item !== null) {
+            denormalize(item);
+          }
+        });
       }
     }
   }
