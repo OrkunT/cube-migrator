@@ -138,7 +138,7 @@ async function run() {
   logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
 
   // Normalize currentDoc
-  normalize(currentDoc);
+  encodeKeys(currentDoc);
 
   // Extract measures from the normalized currentDoc
   let measures = extractMeasures(currentDoc);
