@@ -52,6 +52,16 @@ function extractMeasures(doc) {
   return measures;
 }
 
+function addMeasures(measures1, measures2) {
+  return {
+    sum: measures1.sum + measures2.sum,
+    min: Math.min(measures1.min, measures2.min),
+    max: Math.max(measures1.max, measures2.max),
+    count: measures1.count + measures2.count
+  };
+}
+
+
 
 const fs = require('fs');
 const util = require('util');
@@ -67,46 +77,42 @@ async function run() {
 
     const db = client.db(dbName);
     const sourceCollection = db.collection(sourceCollectionName);
+    const targetCollection = db.collection(targetCollectionName);
     const totalDocuments = await sourceCollection.countDocuments();
     logStream.write(`Total documents to process: ${totalDocuments}\n`);
 
     const cursor = sourceCollection.find({}).sort({ ts: 1 });
     let processedDocuments = 0;
-    let previousDocId = null;
+    let previousDoc = null;
 
     while(await cursor.hasNext()) {
-      const doc = await cursor.next();
+  const currentDoc = await cursor.next();
 
-      // Check the size of the log file
-      const stats = fs.statSync(logFile);
-      if (stats.size > maxLogSize) {
-        //If the log file is larger than 50MB, clear it
-        fs.writeFileSync(logFile, '');
-        logStream = fs.createWriteStream(logFile, { flags: 'a' });
-      }
+  // Check the size of the log file
+  // ... (log file size check code)
 
-      logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
+  logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
 
-      let dimensions = extractDimensions(doc); 
-      let measures = extractMeasures(doc); 
+  // Initialize current document with its own aggregated values
+  let currentDocAggregated = {
+    ...currentDoc,
+    measures: extractMeasures(currentDoc) // Assuming extractMeasures returns the initial aggregated values
+  };
 
-      logStream.write(`Dimensions: ${util.inspect(dimensions)}\n`);
-      logStream.write(`Measures: ${util.inspect(measures)}\n`);
+  // If there is a previous document, retrieve its aggregated values and add them to the current document's measures
+  if (previousDoc) {
+    const previousDocInTarget = await targetCollection.findOne({ _id: previousDoc._id });
+    currentDocAggregated.measures = addMeasures(currentDocAggregated.measures, previousDocInTarget.measures);
+  }
 
-      let cubePipeline = cubes.createCube(dimensions, measures, targetCollectionName);
+  // Insert the current document with updated measures into the target collection
+  await targetCollection.insertOne(currentDocAggregated);
 
-      // Add a $match stage to the beginning of the pipeline to filter for the current document
-      if (previousDocId) {
-        cubePipeline.unshift({ $match: { _id: { $gt: previousDocId } } });
-      }
+  logStream.write(`Finished processing document ${processedDocuments + 1}.\n`);
 
-      logStream.write(`Running aggregation pipeline for document ${processedDocuments + 1}...\n`);
-      await db.collection(sourceCollectionName).aggregate(cubePipeline).toArray();
-      logStream.write(`Finished processing document ${processedDocuments + 1}.\n`);
-      
-      processedDocuments++;
-      previousDocId = doc._id;
-    }
+  processedDocuments++;
+  previousDoc = currentDocAggregated; // Update previousDoc to the current document for the next iteration
+}
 
     logStream.write(`Finished processing all ${totalDocuments} documents.\n`);
   } finally {
@@ -116,5 +122,6 @@ async function run() {
     logStream.end();
   }
 }
+
 
 module.exports = run;
