@@ -73,11 +73,11 @@ function addMeasures(measures1, measures2) {
 
 const Buffer = require('buffer').Buffer;
 
-// Function to encode keys when saving to MongoDB
+/// Function to encode keys when saving to MongoDB
 function encodeKeys(obj) {
   for (let key in obj) {
     if (obj.hasOwnProperty(key)) {
-      let encodedKey = Buffer.from(key).toString('base64');
+      let encodedKey = Buffer.from(key).toString('hex');
       if (encodedKey !== key) {
         obj[encodedKey] = obj[key];
         delete obj[key];
@@ -93,7 +93,7 @@ function encodeKeys(obj) {
 function decodeKeys(obj) {
   for (let key in obj) {
     if (obj.hasOwnProperty(key)) {
-      let decodedKey = Buffer.from(key, 'base64').toString('utf8');
+      let decodedKey = Buffer.from(key, 'hex').toString('utf8');
       if (decodedKey !== key) {
         obj[decodedKey] = obj[key];
         delete obj[key];
@@ -104,7 +104,6 @@ function decodeKeys(obj) {
     }
   }
 }
-
 
 
 const fs = require('fs');
