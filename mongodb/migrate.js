@@ -93,10 +93,12 @@ async function run() {
 
   logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
 
+  const safeMeasures = measures.map((extractMeasures(currentDoc)) => m.replace(".", "_"));
+
   // Initialize current document with its own aggregated values
   let currentDocAggregated = {
     ...currentDoc,
-    measures: extractMeasures(currentDoc) // Assuming extractMeasures returns the initial aggregated values
+    measures: safeMeasures // Assuming extractMeasures returns the initial aggregated values
   };
 
   // If there is a previous document, retrieve its aggregated values and add them to the current document's measures
