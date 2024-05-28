@@ -93,8 +93,12 @@ async function run() {
 
   logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
 
-  const safeMeasures = measures.map((extractMeasures(currentDoc)) => m.replace(".", "_"));
-
+  let measures = extractMeasures(currentDoc);
+  let safeMeasures = {};
+  for (let key in measures) {
+    let safeKey = key.replace(".", "_");
+    safeMeasures[safeKey] = measures[key];
+  }
   // Initialize current document with its own aggregated values
   let currentDocAggregated = {
     ...currentDoc,
