@@ -155,7 +155,7 @@ async function run() {
       };
     });
 
-  logStream.write(`Not added ${currentDocAggregated}.\n`);
+  logStream.write(`Not added ${JSON.stringify(currentDocAggregated)}.\n`);
 
 
   // If there is a previous document, retrieve its aggregated values and add them to the current document's measures
@@ -165,7 +165,7 @@ async function run() {
     currentDocAggregated.measures = addMeasures(currentDocAggregated.measures, previousDocInTarget.measures);
   }
 
-  logStream.write(`Added ${currentDocAggregated}.\n`);
+  logStream.write(`Added ${JSON.stringify(currentDocAggregated)}.\n`);
 
   encodeKeys(currentDocAggregated);
 
