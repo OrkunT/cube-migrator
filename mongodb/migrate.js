@@ -141,7 +141,7 @@ async function run() {
 
   // Extract measures from the normalized currentDoc
   let measures = extractMeasures(currentDoc);
-
+  
       // Initialize currentDocAggregated with its own aggregated values
     let currentDocAggregated = {
       ...currentDoc,
@@ -164,6 +164,8 @@ async function run() {
     const previousDocInTarget = await targetCollection.findOne({ _id: previousDoc._id });
     currentDocAggregated.measures = addMeasures(currentDocAggregated.measures, previousDocInTarget.measures);
   }
+
+  encodeKeys(currentDocAggregated);
 
   // Insert the current document with updated measures into the target collection
   await targetCollection.insertOne(currentDocAggregated);
