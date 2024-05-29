@@ -135,10 +135,7 @@ async function run() {
   // ... (log file size check code)
 
   logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
-
-  // Normalize currentDoc
-  encodeKeys(currentDoc);
-
+  
   // Extract measures from the normalized currentDoc
   let measures = extractMeasures(currentDoc);
   
@@ -161,7 +158,8 @@ async function run() {
 
   // If there is a previous document, retrieve its aggregated values and add them to the current document's measures
   if (previousDoc) {
-    const previousDocInTarget = await targetCollection.findOne({ _id: previousDoc._id });
+    let previousDocInTarget = await targetCollection.findOne({ _id: previousDoc._id });
+	decodeKeys(previousDocInTarget)
     currentDocAggregated.measures = addMeasures(currentDocAggregated.measures, previousDocInTarget.measures);
   }
 
