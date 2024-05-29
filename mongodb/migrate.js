@@ -155,6 +155,8 @@ async function run() {
       };
     });
 
+  logStream.write(`Not added ${currentDocAggregated}.\n`);
+
 
   // If there is a previous document, retrieve its aggregated values and add them to the current document's measures
   if (previousDoc) {
@@ -162,6 +164,8 @@ async function run() {
 	decodeKeys(previousDocInTarget)
     currentDocAggregated.measures = addMeasures(currentDocAggregated.measures, previousDocInTarget.measures);
   }
+
+  logStream.write(`Added ${currentDocAggregated}.\n`);
 
   encodeKeys(currentDocAggregated);
 
