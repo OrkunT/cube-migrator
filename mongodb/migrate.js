@@ -74,10 +74,12 @@ function addMeasures(measures1, measures2) {
 
 const Buffer = require('buffer').Buffer;
 
-/// Function to encode keys when saving to MongoDB
+// List of index fields to exclude from encoding
+const indexFields = ['_id']; // Add your index field names here
+
 function encodeKeys(obj) {
   for (let key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (obj.hasOwnProperty(key) && !indexFields.includes(key)) {
       let encodedKey = Buffer.from(key).toString('hex');
       if (encodedKey !== key) {
         obj[encodedKey] = obj[key];
@@ -90,10 +92,11 @@ function encodeKeys(obj) {
   }
 }
 
+
 // Function to decode keys when querying from MongoDB
 function decodeKeys(obj) {
   for (let key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (obj.hasOwnProperty(key) && !indexFields.includes(key)) {
       let decodedKey = Buffer.from(key, 'hex').toString('utf8');
       if (decodedKey !== key) {
         obj[decodedKey] = obj[key];
