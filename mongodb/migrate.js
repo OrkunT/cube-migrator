@@ -105,6 +105,37 @@ function decodeKeys(obj) {
   }
 }
 
+async function granularFlattenedExclusiveAggregatedDimensions(sourceCollection, targetCollection, resetInterval = 1000) {
+  const cursor = sourceCollection.find({}).sort({ ts: 1 });
+  let processedDocuments = 0;
+  let combinedDimensions = null;
+
+  while(await cursor.hasNext()) {
+    const currentDoc = await cursor.next();
+
+    // Use flattenedExclusiveAggregatedDimensions function
+    combinedDimensions = flattenedExclusiveAggregatedDimensions(currentDoc, combinedDimensions, null, processedDocuments, resetInterval);
+
+    // If the reset interval is reached, insert the combined dimensions into the target collection and reset combinedDimensions
+    if ((processedDocuments + 1) % resetInterval === 0) {
+      let encodedEntry = JSON.parse(JSON.stringify(combinedDimensions));
+      encodeKeys(encodedEntry);
+      await targetCollection.insertOne(encodedEntry);
+      combinedDimensions = null;
+    }
+
+    processedDocuments++;
+  }
+
+  // If there are remaining documents that haven't been inserted into the target collection, insert them now
+  if (combinedDimensions !== null) {
+    let encodedEntry = JSON.parse(JSON.stringify(combinedDimensions));
+    encodeKeys(encodedEntry);
+    await targetCollection.insertOne(encodedEntry);
+  }
+}
+
+
 function flattenedExclusiveAggregatedDimensions(dimensions, combinedDimensions = null, selection = null, docNumber = 0, resetInterval = 1000) {
   if (selection === null) {
     selection = ["up","custom","cmp","sg"];   //random tags
@@ -113,6 +144,7 @@ function flattenedExclusiveAggregatedDimensions(dimensions, combinedDimensions =
   let result = combinedDimensions ? JSON.parse(JSON.stringify(combinedDimensions)) : {};
   let tracking = result.tracking || [];
   let keysInCurrentDoc = [];
+  let allKeys = []; // Add this line to keep track of all keys
 
   function isDate(integer) {
     const date = new Date(integer);
@@ -132,6 +164,9 @@ function flattenedExclusiveAggregatedDimensions(dimensions, combinedDimensions =
           let combinedKey = path ? `${path}.${key}` : key;
           result[combinedKey] = dimension[key];
           keysInCurrentDoc.push(combinedKey);
+          if (!allKeys.includes(combinedKey)) {
+            allKeys.push(combinedKey); // Update allKeys whenever a new key is encountered
+          }
         }
       }
       return combinedKeys;
@@ -177,22 +212,16 @@ function flattenedExclusiveAggregatedDimensions(dimensions, combinedDimensions =
   // Update tracking
   if (docNumber === 0 || docNumber % resetInterval === 0) {
     // Initialize tracking for the first document or every resetInterval documents
-    tracking = [keysInCurrentDoc.map(() => '1').join('')];
+    tracking = [allKeys.map(key => keysInCurrentDoc.includes(key) ? '1' : '0').join('')]; // Use allKeys here instead of keysInCurrentDoc
   } else {
     // Update tracking for subsequent documents
-    let trackingForCurrentDoc = tracking[0].split('').map((val, index) => {
-      return keysInCurrentDoc.includes(Object.keys(result)[index]) ? '1' : '0';
-    }).join('');
+    let trackingForCurrentDoc = allKeys.map(key => keysInCurrentDoc.includes(key) ? '1' : '0').join(''); // Use allKeys here too
     tracking.push(trackingForCurrentDoc);
   }
 
   result.tracking = tracking;
   return result;
 }
-
-
-const fs = require('fs');
-const util = require('util');
 
 async function run() {
   const logFile = 'app.log';
@@ -209,31 +238,8 @@ async function run() {
     const totalDocuments = await sourceCollection.countDocuments();
     logStream.write(`Total documents to process: ${totalDocuments}\n`);
 
-    const cursor = sourceCollection.find({}).sort({ ts: 1 });
-    let processedDocuments = 0;
-    let previousDoc = null;
-
-    while(await cursor.hasNext()) {
-      const currentDoc = await cursor.next();
-
-      // Check the size of the log file
-      // ... (log file size check code)
-
-      logStream.write(`Processing document ${processedDocuments + 1} of ${totalDocuments}...\n`);
-
-      // Use flattenedExclusiveAggregatedDimensions function
-      let currentDocAggregated = flattenedExclusiveAggregatedDimensions(currentDoc, previousDoc,null,processedDocuments,1000);
-
-      // Insert the current document with updated measures into the target collection
-      let encodedEntry = JSON.parse(JSON.stringify(currentDocAggregated));
-      encodeKeys(encodedEntry);
-      await targetCollection.insertOne(encodedEntry);
-
-      logStream.write(`Finished processing document ${processedDocuments + 1}.\n`);
-
-      processedDocuments++;
-      previousDoc = currentDocAggregated; // Update previousDoc to the current document for the next iteration
-    }
+    // Call granularFlattenedExclusiveAggregatedDimensions function
+    await granularFlattenedExclusiveAggregatedDimensions(sourceCollection, targetCollection, 1000);
 
     logStream.write(`Finished processing all ${totalDocuments} documents.\n`);
   } finally {
@@ -243,6 +249,8 @@ async function run() {
     logStream.end();
   }
 }
+
+
 
 
 module.exports = run;
