@@ -113,12 +113,13 @@ async function granularFlattenedExclusiveAggregatedDimensions(sourceCollection, 
   const cursor = sourceCollection.find({}).sort({ ts: 1 });
   let processedDocuments = 0;
   let combinedDimensions = null;
+  let tracking = []; // Move tracking array here
 
   while(await cursor.hasNext()) {
     const currentDoc = await cursor.next();
 
-    // Use flattenedExclusiveAggregatedDimensions function
-    combinedDimensions = flattenedExclusiveAggregatedDimensions(currentDoc, combinedDimensions, null, processedDocuments, resetInterval);
+    // Pass tracking array as argument
+    combinedDimensions = flattenedExclusiveAggregatedDimensions(currentDoc, combinedDimensions, null, processedDocuments, resetInterval, tracking);
 
     // If the reset interval is reached, insert the combined dimensions into the target collection and reset combinedDimensions
     if ((processedDocuments + 1) % resetInterval === 0) {
@@ -126,6 +127,7 @@ async function granularFlattenedExclusiveAggregatedDimensions(sourceCollection, 
       encodeKeys(encodedEntry);
       await targetCollection.insertOne(encodedEntry);
       combinedDimensions = null;
+      tracking = []; // Reset tracking array here
     }
 
     processedDocuments++;
@@ -140,7 +142,7 @@ async function granularFlattenedExclusiveAggregatedDimensions(sourceCollection, 
 }
 
 
-function flattenedExclusiveAggregatedDimensions(dimensions, combinedDimensions = null, selection = null, docNumber = 0, resetInterval = 1000) {
+function flattenedExclusiveAggregatedDimensions(dimensions, combinedDimensions = null, selection = null, docNumber = 0, resetInterval = 1000, tracking = []) {
   if (selection === null) {
     selection = ["up","custom","cmp","sg"];   //random tags
   }
