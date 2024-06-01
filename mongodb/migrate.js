@@ -225,7 +225,9 @@ async function run() {
       let currentDocAggregated = flattenedExclusiveAggregatedDimensions(currentDoc, previousDoc,null,processedDocuments,1000);
 
       // Insert the current document with updated measures into the target collection
-      await targetCollection.insertOne(currentDocAggregated);
+      let encodedEntry = currentDocAggregated;
+      encodeKeys(encodedEntry);
+      await targetCollection.insertOne(encodedEntry);
 
       logStream.write(`Finished processing document ${processedDocuments + 1}.\n`);
 
