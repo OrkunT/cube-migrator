@@ -1,7 +1,6 @@
 // This script converts a MongoDB collection of documents into a hyperdimensional cube using a bottom-up approach.
 
 const MongoClient = require('mongodb').MongoClient;
-const cubes = require("mdb-cubes");
 const fs = require('fs');
 
 // Connection URL
@@ -75,7 +74,7 @@ function addMeasures(measures1, measures2) {
 const Buffer = require('buffer').Buffer;
 
 // List of index fields to exclude from encoding
-const indexFields = ['_id']; // Add your index field names here
+const indexFields = ['_id','tracking']; // Add your index field names here
 
 function encodeKeys(obj) {
   for (let key in obj) {
