@@ -2,6 +2,7 @@
 
 const MongoClient = require('mongodb').MongoClient;
 const cubes = require("mdb-cubes");
+const fs = require('fs');
 
 // Connection URL
 const url = 'mongodb://mongodb:27017';
