@@ -225,7 +225,7 @@ async function run() {
       let currentDocAggregated = flattenedExclusiveAggregatedDimensions(currentDoc, previousDoc,null,processedDocuments,1000);
 
       // Insert the current document with updated measures into the target collection
-      let encodedEntry = currentDocAggregated;
+      let encodedEntry = JSON.parse(JSON.stringify(currentDocAggregated));
       encodeKeys(encodedEntry);
       await targetCollection.insertOne(encodedEntry);
 
