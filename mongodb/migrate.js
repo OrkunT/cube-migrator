@@ -148,7 +148,7 @@ function flattenedExclusiveAggregatedDimensions(dimensions, combinedDimensions =
   }
 
   let result = combinedDimensions ? JSON.parse(JSON.stringify(combinedDimensions)) : {};
-  let tracking = result.tracking || [];
+  tracking = result.tracking || [];
   let keysInCurrentDoc = [];
   let allKeys = []; // Add this line to keep track of all keys
 
