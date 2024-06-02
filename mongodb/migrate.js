@@ -4,7 +4,7 @@ const MongoClient = require('mongodb').MongoClient;
 const fs = require('fs');
 
 // Connection URL
-const url = 'mongodb://mongodb:27017';
+const url = 'mongodb://localhost:27017';
 
 // Database Name
 const dbName = 'testDB';
@@ -74,7 +74,7 @@ function addMeasures(measures1, measures2) {
 const Buffer = require('buffer').Buffer;
 
 // List of index fields to exclude from encoding
-const indexFields = ['_id','tracking']; // Add your index field names here
+const indexFields = ['_id','uid','did','lsid','tracking','cd']; // Add your index field names here
 
 function encodeKeys(obj) {
   for (let key in obj) {
