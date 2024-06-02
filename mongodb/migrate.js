@@ -74,7 +74,7 @@ function addMeasures(measures1, measures2) {
 const Buffer = require('buffer').Buffer;
 
 // List of index fields to exclude from encoding
-const indexFields = ['_id','uid','did','lsid','tracking','cd']; // Add your index field names here
+const indexFields = ['_id','uid','did','lsid','tracking']; // Add your index field names here
 
 function encodeKeys(obj) {
   for (let key in obj) {
